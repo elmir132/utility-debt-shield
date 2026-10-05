@@ -6,7 +6,7 @@ A small API that answers one question for a rental platform before a lease is si
 
 ## Context and contribution
 
-Utility Debt Shield was my idea in the Cornell Tech Product Studio (Team 419: Elmir Abdullaiev, Yihan Gu, Xie Li; fall 2026). Each teammate pitched a different idea; the others were MoveLog (Yihan) and SafePath NYC (Xie Li). I also developed Utility Debt Shield for my own NBAY 6080 business plan. **This repository, the code and tests, is my work alone.** It is a prototype of the check itself, not a product.
+Utility Debt Shield was my idea in the Cornell Tech Product Studio (Team 419: Elmir Abdullaiev, Yihan Gu, Xie Li; fall 2026). Each teammate pitched a different idea; the others were MoveLog (Yihan) and SafePath NYC (Xie Li). I also developed Utility Debt Shield for my own NBAY 6080 business plan. **The code and tests in this repository are mine, written with AI assistance (Claude Code); I specified the rules and the caveats and reviewed the result.** It is a prototype of the check itself, not a product.
 
 ## What it is not
 

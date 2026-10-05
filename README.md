@@ -1,8 +1,12 @@
 # Utility Debt Shield (prototype)
 
+![tests](https://github.com/elmir132/utility-debt-shield/actions/workflows/ci.yml/badge.svg)
+
 A small API that answers one question for a rental platform before a lease is signed: **could the new tenant run into trouble turning the utilities on at this address?** It flags unpaid balances, meter holds and deposit requirements, and says how serious the friction is.
 
-This started as my idea in the Cornell Tech Product Studio (Team 419, fall 2026) and was developed further for the NBAY 6080 business plan. This repository is a **prototype of the check itself**. It is not a product.
+## Context and contribution
+
+Utility Debt Shield was my idea in the Cornell Tech Product Studio (Team 419: Elmir Abdullaiev, Yihan Gu, Xie Li; fall 2026). Each teammate pitched a different idea; the others were MoveLog (Yihan) and SafePath NYC (Xie Li). I also developed Utility Debt Shield for my own NBAY 6080 business plan. **This repository, the code and tests, is my work alone.** It is a prototype of the check itself, not a product.
 
 ## What it is not
 
@@ -17,16 +21,25 @@ This started as my idea in the Cornell Tech Product Studio (Team 419, fall 2026)
 POST /v1/checks  {address, consent}  ->  provider.fetch(address)  ->  rules engine  ->  result
 ```
 
-Rules (`udshield/engine.py`, deterministic, all thresholds are constants at the top of the file):
+### Decision table
+
+Rules live in `udshield/engine.py` and are deterministic; the thresholds are constants at the top of the file. The boundaries below are covered row by row in `tests/test_boundaries.py`.
+
+| Balance | Days past due | Friction |
+|---|---|---|
+| credit or $0 | any | none |
+| $0.01 to $49.99 | under 60 or unknown | low |
+| $50.00 to $299.99 | under 60 or unknown | medium |
+| $300.00 or more | any | high |
+| any amount above $0 | 60 or more | high |
+| not reported | n/a | info flag only; overall `unknown` if nothing else is known |
+
+Other signals, independent of the balance:
 
 | Signal | Friction |
 |---|---|
-| Balance under $50 | low |
-| Balance $50 to $300 | medium |
-| Balance $300 or more, or any balance 60+ days past due | high |
 | Meter hold | high |
-| Deposit required | medium |
-| Balance not reported by the source | info; overall result `unknown` if nothing else is known |
+| Deposit required (above $0) | medium |
 
 The overall result is the worst flag across all utilities.
 
@@ -34,7 +47,7 @@ The overall result is the worst flag across all utilities.
 
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements-dev.txt
 python app.py        # http://localhost:5000  (PORT=5058 python app.py to change)
 pytest -q
 ```
@@ -47,7 +60,7 @@ curl -X POST localhost:5000/v1/checks \
 
 Demo addresses `1` to `4 demo street, example city` map to fixed scenarios (clean, small balance, arrears plus meter hold plus deposit, no balance data). Any other address gets a stable pseudo-random scenario.
 
-Without `consent: true` the API returns 403; without `address` it returns 400. `GET /v1/checks/<id>` returns a stored result.
+Without `consent: true` the API returns 403; without `address` it returns 400. `GET /v1/checks/<id>` returns a stored result. A request body that is not a JSON object returns 400. The full contract is in [`openapi.yaml`](openapi.yaml); a test keeps it in sync with the routes and flag codes.
 
 ## Layout
 
@@ -56,7 +69,9 @@ app.py                 Flask routes
 udshield/models.py     records, flags, result
 udshield/engine.py     rules
 udshield/providers.py  provider interface and the mock source
-tests/                 19 tests
+tests/                 44 tests: rules, boundaries, API, OpenAPI sync
+openapi.yaml           API contract
+.github/workflows/     CI (pytest on Python 3.11 and 3.12)
 ```
 
 ## Next steps if this were taken further

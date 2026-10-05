@@ -1,0 +1,68 @@
+openapi: 3.0.3
+info:
+  title: Utility Debt Shield (prototype)
+  version: 0.1.0
+  description: >
+    Flags utility activation friction at an address before a lease is signed.
+    Prototype: the only data source is a mock with fictional data. A high-friction
+    result does not mean the renter owes the balance.
+paths:
+  /v1/checks:
+    post:
+      summary: Run a check for an address
+      description: "Requires the account holder's consent (consent must be true)."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [address, consent]
+              properties:
+                address: {type: string, minLength: 1}
+                consent: {type: boolean, description: "Must be exactly true."}
+      responses:
+        "201":
+          description: Check created
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Check"}
+        "400": {description: "Missing or invalid address, or body is not a JSON object"}
+        "403": {description: "Consent missing or not exactly true"}
+  /v1/checks/{id}:
+    get:
+      summary: Fetch a stored check
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: string}}
+      responses:
+        "200":
+          description: The check
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Check"}
+        "404": {description: Unknown id}
+  /healthz:
+    get:
+      summary: Liveness probe
+      responses:
+        "200": {description: OK}
+components:
+  schemas:
+    Flag:
+      type: object
+      properties:
+        code: {type: string, enum: [BALANCE_ON_ACCOUNT, BALANCE_UNAVAILABLE, METER_HOLD, DEPOSIT_REQUIRED]}
+        severity: {type: string, enum: [info, low, medium, high]}
+        utility: {type: string}
+        message: {type: string}
+    Check:
+      type: object
+      properties:
+        id: {type: string}
+        address: {type: string}
+        data_source: {type: string, example: mock}
+        friction: {type: string, enum: [none, low, medium, high, unknown]}
+        flags:
+          type: array
+          items: {$ref: "#/components/schemas/Flag"}
+        notice: {type: string}

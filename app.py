@@ -14,7 +14,9 @@ def create_app(provider=None):
 
     @app.post("/v1/checks")
     def create_check():
-        body = request.get_json(silent=True) or {}
+        body = request.get_json(silent=True)
+        if not isinstance(body, dict):
+            return jsonify(error="request body must be a JSON object"), 400
         address = body.get("address")
         if not isinstance(address, str) or not address.strip():
             return jsonify(error="'address' is required"), 400
